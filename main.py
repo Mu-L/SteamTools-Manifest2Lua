@@ -10,7 +10,9 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 # 定义全局变量
-repos = ['ManifestHub/ManifestHub', 'ikun0014/ManifestHub', 'Auiowu/ManifestAutoUpdate', 'tymolu233/ManifestAutoUpdate']
+repos = ["SteamAutoCracks/ManifestHub",
+        "ikun0014/ManifestHub",
+        "Auiowu/ManifestAutoUpdate"]
 
 
 # 错误处理函数

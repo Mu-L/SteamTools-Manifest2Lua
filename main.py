@@ -13,7 +13,8 @@ log = logging.getLogger(__name__)
 repos = [
     "SteamAutoCracks/ManifestHub",
     "ikun0014/ManifestHub",
-    "Auiowu/ManifestAutoUpdate"
+    "Auiowu/ManifestAutoUpdate",
+    "tymolu233/ManifestAutoUpdate-fix"
 ]
 
 # 错误处理函数

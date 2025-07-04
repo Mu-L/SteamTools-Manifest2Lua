@@ -23,7 +23,7 @@ def stack_error(e):
 
 # 从SteamUI搜索游戏信息
 async def search_game_info(search_term):
-    url = f'https://steamui.com/loadGames.php?search={search_term}'
+    url = f'https://steamui.com/api/loadGames.php?search={search_term}'
     async with aiohttp.ClientSession() as session:
         try:
             async with session.get(url, ssl=False) as r:

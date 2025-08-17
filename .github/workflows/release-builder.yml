@@ -40,15 +40,15 @@ jobs:
             asset_name_prefix: windows-amd64
             archive_suffix: zip
 
-          # 4. macOS AMD64 (Intel)
-          - os: macos-latest
+          # 4. macOS AMD64 (Intel) - 指定为 macos-12 保证兼容性
+          - os: macos-12
             arch: x86_64
             asset_name_prefix: macos-amd64
             target_arch_for_pyinstaller: x86_64
             archive_suffix: tar.gz
 
-          # 5. macOS ARM64 (Apple Silicon)
-          - os: macos-latest
+          # 5. macOS ARM64 (Apple Silicon) - 指定为 macos-12 保证兼容性
+          - os: macos-12
             arch: arm64
             asset_name_prefix: macos-arm64
             target_arch_for_pyinstaller: arm64

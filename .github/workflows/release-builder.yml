@@ -21,8 +21,8 @@ env:
 jobs:
   build-release-windows:
     name: Build for Windows (x86_64)
-    # 指定构建环境为 windows-2019 以保证 Python 3.9 兼容性
-    runs-on: windows-2019
+    # 指定构建环境为 windows-2022，因为 windows-2019 已被移除
+    runs-on: windows-2022
 
     steps:
       # 第一步：检出你的代码

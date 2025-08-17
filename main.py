@@ -131,6 +131,7 @@ async def get_manifest(sha, path, save_dir, repo):
 
 # 异步主函数组织下载和处理
 async def download_and_process(app_id, game_name):
+    app_id = str(app_id)
     app_id_list = list(filter(str.isdecimal, app_id.strip().split('-')))
     app_id = app_id_list[0]
     # 创建保存manifest和Lua文件的目录
@@ -182,11 +183,7 @@ def parse_vdf_to_lua(depot_info, appid, save_dir):
     lua_lines.append(f'addappid({appid})')
     for depot_id, decryption_key in depot_info:
         lua_lines.append(f'addappid({depot_id},1,"{decryption_key}")')
-        # 查找depot的所有manifest文件
-        manifest_files = [f for f in os.listdir(save_dir) if f.startswith(depot_id + "_") and f.endswith(".manifest")]
-        for manifest_file in manifest_files:
-            manifest_id = manifest_file[len(depot_id) + 1:-len(".manifest")]
-            lua_lines.append(f'setManifestid({depot_id},"{manifest_id}",0)')
+    # 已移除查找 manifest 檔案並生成 setManifestid 的部分
     return "\n".join(lua_lines)
 
 # 主函数运行整个流程

@@ -22,36 +22,37 @@ jobs:
     strategy:
       matrix:
         include:
-          # 1. Linux AMD64 (x86_64)
-          - os: ubuntu-latest
+          # 1. Linux AMD64 (x86_64) - 指定为 ubuntu-22.04 保证兼容性
+          - os: ubuntu-22.04
             arch: x86_64
             asset_name_prefix: linux-amd64
-            target_arch_for_pyinstaller: x86_64
+            archive_suffix: tar.gz
 
           # 2. Linux ARM64 (aarch64) - 需要 QEMU 来模拟
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             arch: aarch64
             asset_name_prefix: linux-arm64
-            target_arch_for_pyinstaller: aarch64
+            archive_suffix: tar.gz
 
           # 3. Windows AMD64 (x86_64)
           - os: windows-latest
             arch: x86_64
             asset_name_prefix: windows-amd64
-            asset_suffix: .exe
-            archive_format: zip
+            archive_suffix: zip
 
           # 4. macOS AMD64 (Intel)
           - os: macos-latest
             arch: x86_64
             asset_name_prefix: macos-amd64
             target_arch_for_pyinstaller: x86_64
+            archive_suffix: tar.gz
 
           # 5. macOS ARM64 (Apple Silicon)
           - os: macos-latest
             arch: arm64
             asset_name_prefix: macos-arm64
             target_arch_for_pyinstaller: arm64
+            archive_suffix: tar.gz
 
     # 指定构建环境的虚拟机
     runs-on: ${{ matrix.os }}
@@ -59,16 +60,16 @@ jobs:
     steps:
       # 第一步：检出你的代码
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # 第二步：(仅限ARM64) 设置 QEMU 模拟器
       - name: Set up QEMU
-        if: matrix.os == 'ubuntu-latest' && matrix.arch == 'aarch64'
-        uses: docker/setup-qemu-action@v2
+        if: matrix.os == 'ubuntu-22.04' && matrix.arch == 'aarch64'
+        uses: docker/setup-qemu-action@v3
 
       # 第三步：设置 Python 环境
       - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           architecture: ${{ matrix.arch }}
@@ -82,31 +83,43 @@ jobs:
 
       # 第五步：使用 PyInstaller 构建
       - name: Build with PyInstaller
-        # 注意 macOS 的 --target-arch 参数
         run: |
-          pyinstaller --onefile \
-                      --name ${{ env.APP_NAME }}-${{ matrix.asset_name_prefix }} \
-                      ${{ matrix.os == 'macos-latest' && format('--target-arch {0}', matrix.target_arch_for_pyinstaller) || '' }} \
-                      main.py
+          PYINSTALLER_ARGS="--onefile --name ${{ env.APP_NAME }}"
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            PYINSTALLER_ARGS="$PYINSTALLER_ARGS --target-arch ${{ matrix.target_arch_for_pyinstaller }}"
+          fi
+          pyinstaller $PYINSTALLER_ARGS main.py
 
-      # 第六步：打包成压缩文件 (zip for windows, tar.gz for others)
+      # 第六步：准备用于打包的文件
+      # 将可执行文件移动到一个单独的目录中，方便打包
+      - name: Prepare package
+        shell: bash
+        run: |
+          mkdir -p release
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            mv dist/${{ env.APP_NAME }}.exe release/
+          else
+            mv dist/${{ env.APP_NAME }} release/
+          fi
+
+      # 第七步：打包成压缩文件
       - name: Package the executable
         shell: bash
         run: |
-          cd dist
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            7z a ../${{ env.APP_NAME }}-${{ matrix.asset_name_prefix }}.zip ./*
+          cd release
+          ASSET_NAME="../${{ env.APP_NAME }}-${{ matrix.asset_name_prefix }}.${{ matrix.archive_suffix }}"
+          if [ "${{ matrix.archive_suffix }}" == "zip" ]; then
+            7z a $ASSET_NAME ./*
           else
-            tar -czvf ../${{ env.APP_NAME }}-${{ matrix.asset_name_prefix }}.tar.gz ./*
+            tar -czvf $ASSET_NAME ./*
           fi
           cd ..
-          
-      # 第七步：上传构建产物到 Release
+
+      # 第八步：上传构建产物到 Release
       - name: Upload assets to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ env.APP_NAME }}-${{ matrix.asset_name_prefix }}.*
+          file: ${{ env.APP_NAME }}-${{ matrix.asset_name_prefix }}.${{ matrix.archive_suffix }}
           tag: ${{ github.ref_name }}
           overwrite: true
-          file_glob: true

@@ -62,7 +62,14 @@ jobs:
           7z a ../${{ env.APP_NAME }}-windows-amd64.zip ./*
           cd ..
 
-      # 第七步：上传构建产物到 Release
+      # 第七步：上传构建产物 (Artifact)，以便在手动运行时可以下载
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-windows-amd64
+          path: ${{ env.APP_NAME }}-windows-amd64.zip
+
+      # 第八步：上传构建产物到 Release
       # 仅当工作流由一个 tag (例如 v1.0.0) 触发时才执行此步骤
       - name: Upload assets to release
         if: startsWith(github.ref, 'refs/tags/')

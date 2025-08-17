@@ -183,7 +183,11 @@ def parse_vdf_to_lua(depot_info, appid, save_dir):
     lua_lines.append(f'addappid({appid})')
     for depot_id, decryption_key in depot_info:
         lua_lines.append(f'addappid({depot_id},1,"{decryption_key}")')
-    # 已移除查找 manifest 檔案並生成 setManifestid 的部分
+        # 查找depot的所有manifest文件
+        manifest_files = [f for f in os.listdir(save_dir) if f.startswith(depot_id + "_") and f.endswith(".manifest")]
+        for manifest_file in manifest_files:
+            manifest_id = manifest_file[len(depot_id) + 1:-len(".manifest")]
+            lua_lines.append(f'setManifestid({depot_id},"{manifest_id}",0)')
     return "\n".join(lua_lines)
 
 # 主函数运行整个流程
